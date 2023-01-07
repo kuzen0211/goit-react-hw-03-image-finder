@@ -4,8 +4,8 @@ export const Button = styled.button`
   display: block;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 40px;
+  margin-bottom: 40px;
   padding: 5px 20px;
 
   border-radius: 2px;

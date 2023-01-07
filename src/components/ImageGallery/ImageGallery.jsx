@@ -19,6 +19,7 @@ export class ImageGallery extends Component {
     largeImg: null,
     alt: null,
     totalPage: null,
+    loader: false,
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -26,39 +27,34 @@ export class ImageGallery extends Component {
       prevProps.searchName !== this.props.searchName ||
       prevState.page !== this.state.page
     ) {
-      if (this.state.page === 1) {
-        this.setState({ status: 'pending' });
-      }
+      fetchImages(this.props.searchName, this.state.page)
+        .then(data => {
+          if (data.totalHits === 0) {
+            return this.setState({ status: 'rejected' });
+          }
+          this.setState({ status: 'pending' });
 
-      setTimeout(() => {
-        fetchImages(this.props.searchName, this.state.page)
-          .then(data => {
-            if (data.totalHits === 0) {
-              return this.setState({ status: 'rejected' });
-            }
-
-            if (this.state.image.length === 0) {
-              return this.setState({
-                image: data.hits,
-                status: 'resolved',
-                totalPage: data.totalHits,
-              });
-            }
-            if (this.props.searchName !== prevProps.searchName) {
-              return this.setState({
-                image: data.hits,
-                status: 'resolved',
-                totalPage: data.totalHits,
-              });
-            }
-            return this.setState(prevState => ({
-              image: [...prevState.image, ...data.hits],
+          if (
+            this.props.searchName !== prevProps.searchName ||
+            this.state.image.length === 0
+          ) {
+            return this.setState({
+              image: data.hits,
               status: 'resolved',
               totalPage: data.totalHits,
-            }));
-          })
-          .catch(error => this.setState({ error, status: 'rejected' }));
-      }, 500);
+              page: 1,
+              loader: true,
+            });
+          }
+          return this.setState(prevState => ({
+            image: [...prevState.image, ...data.hits],
+            status: 'resolved',
+            totalPage: data.totalHits,
+            loader: true,
+          }));
+        })
+        .catch(error => this.setState({ error, status: 'rejected' }))
+        .finally(this.setState({ loader: false }));
     }
   }
 
@@ -83,7 +79,7 @@ export class ImageGallery extends Component {
   };
 
   render() {
-    const { image, status, openedModal, largeImg, alt } = this.state;
+    const { image, status, openedModal, largeImg, alt, loader } = this.state;
 
     if (status === 'idle') {
       return <IdleImages />;
@@ -101,7 +97,6 @@ export class ImageGallery extends Component {
               <img src={largeImg} alt={alt} width="800" height="500" />
             </Modal>
           )}
-
           <GalleryList onClick={this.handleClickImg}>
             {image.map(({ id, tags, webformatURL, largeImageURL }) => (
               <ImageGalleryItem
@@ -113,6 +108,8 @@ export class ImageGallery extends Component {
               />
             ))}
           </GalleryList>
+
+          {!loader && <Loader />}
 
           {this.state.page <= Math.round(this.state.totalPage / 12) && (
             <LoadMore onClick={() => this.handleNextPage()} />
