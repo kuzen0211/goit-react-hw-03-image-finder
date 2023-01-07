@@ -27,12 +27,12 @@ export class ImageGallery extends Component {
       prevProps.searchName !== this.props.searchName ||
       prevState.page !== this.state.page
     ) {
+      // this.setState({ status: 'pending' });
       fetchImages(this.props.searchName, this.state.page)
         .then(data => {
           if (data.totalHits === 0) {
             return this.setState({ status: 'rejected' });
           }
-          this.setState({ status: 'pending' });
 
           if (
             this.props.searchName !== prevProps.searchName ||
@@ -85,9 +85,9 @@ export class ImageGallery extends Component {
       return <IdleImages />;
     }
 
-    if (status === 'pending') {
-      return <Loader />;
-    }
+    // if (status === 'pending') {
+    //   return <Loader />;
+    // }
 
     if (status === 'resolved') {
       return (
